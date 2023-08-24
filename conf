@@ -1,0 +1,47 @@
+server {
+    # Internal image resizing server.
+    server_name localhost;
+    listen 7001;
+
+    location ~ "^/media/(?<image>.+)$" {
+        set $width "-";
+        set $height "-";
+
+        if ($arg_w != '')
+        {
+                set $width $arg_w;
+        }
+
+        if ($arg_h != '')
+        {
+                set $height $arg_h;
+        }
+
+        alias /var/www/portal-backend/html/portal/media/$image;
+        image_filter resize $width -;
+        image_filter_jpeg_quality 75;
+        image_filter_buffer 8M;
+    }
+}
+
+#proxy_cache_path /tmp/nginx-images-cache/ levels=1:2 keys_zone=images:10m inactive=24h max_size=100m;
+
+#server {
+    # Public-facing cache server.
+    #listen 7000;
+
+    # Only serve widths of 768 or 1920 so we can cache effectively.
+    #location ~ "^/media/(?<image>.+)$" {
+        # Proxy to internal image resizing server.
+        #proxy_pass http://localhost:8881/media/$image$is_args$args;
+        #proxy_cache images;
+        #proxy_cache_valid 200 24h;
+    #}
+
+    #location /media {
+        # Nginx needs you to manually define DNS resolution when using
+        # variables in proxy_pass. Creating this dummy location avoids that.
+        # The error is: "no resolver defined to resolve localhost".
+        #proxy_pass http://localhost:8881/;
+    #}
+#}
